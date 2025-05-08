@@ -1,0 +1,38 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "config_manager"
+version = "0.0.0"  # Version is set dynamically by the CI tool on publication
+authors = ["Pitt Center for Research Computing and Data", ]
+license = "GPL-3.0-only"
+readme = "README.md"
+description = "Dynamic JupyterHub config manager service."
+homepage = "https://github.com/pitt-crc/Jupyter-Authenticator"
+repository = "https://github.com/pitt-crc/Jupyter-Authenticator"
+documentation = "https://github.com/pitt-crc/Jupyter-Authenticator"
+keywords = ["Pitt", "CRC", "Jupyter", "JupyterHub", "JupyterLab", "Configuration", "Manager"]
+classifiers = [
+    "Intended Audience :: System Administrators",
+    "Topic :: System :: Systems Administration",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+jupyterhub = "*"
+tornado = "*"
+traitlets = "*"
+
+[tool.poetry.group.tests]
+optional = true
+
+[tool.poetry.group.tests.dependencies]
+coverage = "*"
