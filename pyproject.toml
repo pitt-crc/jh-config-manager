@@ -9,9 +9,9 @@ authors = ["Pitt Center for Research Computing and Data", ]
 license = "GPL-3.0-only"
 readme = "README.md"
 description = "Dynamic JupyterHub config manager service."
-homepage = "https://github.com/pitt-crc/Jupyter-Authenticator"
-repository = "https://github.com/pitt-crc/Jupyter-Authenticator"
-documentation = "https://github.com/pitt-crc/Jupyter-Authenticator"
+homepage = "https://github.com/pitt-crc/jh-config-manager"
+repository = "https://github.com/pitt-crc/jh-config-manager"
+documentation = "https://github.com/pitt-crc/jh-config-manager"
 keywords = ["Pitt", "CRC", "Jupyter", "JupyterHub", "JupyterLab", "Configuration", "Manager"]
 classifiers = [
     "Intended Audience :: System Administrators",
