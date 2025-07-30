@@ -3,7 +3,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "config_manager"
+name = "jh-config-manager"
 version = "0.0.0"  # Version is set dynamically by the CI tool on publication
 authors = ["Pitt Center for Research Computing and Data", ]
 license = "GPL-3.0-only"
