@@ -35,9 +35,9 @@ pip install jh-config-manager
 ```python
 c.JupyterHub.services = [
     {
-        'name': 'config-manager',
+        'name': 'jh-config-manager',
         'command': [
-            'python', '-m', 'config_manager',
+            'python', '-m', 'jh_config_manager',
             '--venv_root=/ihome/crc/install/jupyterhub/hub.5.2.1/envs',
             '--modules_config_file=/ihome/crc/install/jupyterhub/modules_config.json',
             '--cache_file=/ihome/crc/install/jupyterhub/config_cache.json',

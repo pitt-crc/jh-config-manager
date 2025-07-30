@@ -20,7 +20,7 @@ def main():
         reload_interval=args.reload_interval
     )
 
-    print("[config_manager] Service running. Watching for changes...")
+    print("[jh_config_manager] Service running. Watching for changes...")
     while True:
         time.sleep(60)
 

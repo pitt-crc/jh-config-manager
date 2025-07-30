@@ -15,11 +15,11 @@ def start_config_watcher(venv_root, modules_config_file, cache_file, reload_inte
                 write_cache(cache_file, venvs, modules)
                 last_venvs = venvs
                 last_modules = modules
-                print("[config_manager] Cache updated.")
+                print("[jh_config_manager] Cache updated.")
 
             time.sleep(reload_interval)
 
-    print("[config_manager] Service started.")
+    print("[jh_config_manager] Service started.")
     t = Thread(target=refresh_loop, daemon=True)
     t.start()
     return t
