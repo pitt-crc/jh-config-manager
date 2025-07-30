@@ -8,7 +8,7 @@ def get_virtualenvs(venv_root):
             if os.path.isdir(os.path.join(venv_root, d))
         ])
     except Exception as e:
-        print(f"[config_manager] Error scanning virtualenvs: {e}")
+        print(f"[jh_config_manager] Error scanning virtualenvs: {e}")
         return []
 
 def load_modules_config(modules_config_file):
@@ -16,7 +16,7 @@ def load_modules_config(modules_config_file):
         with open(modules_config_file) as f:
             return json.load(f)
     except Exception as e:
-        print(f"[config_manager] Error loading modules config: {e}")
+        print(f"[jh_config_manager] Error loading modules config: {e}")
         return {}
 
 def write_cache(cache_file, venvs, modules):
@@ -24,4 +24,4 @@ def write_cache(cache_file, venvs, modules):
         with open(cache_file, 'w') as f:
             json.dump({'virtualenvs': venvs, 'modules': modules}, f)
     except Exception as e:
-        print(f"[config_manager] Error writing cache: {e}")
+        print(f"[jh_config_manager] Error writing cache: {e}")

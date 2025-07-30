@@ -1,7 +1,7 @@
 import argparse
 import os
 import time
-from config_manager.service import start_config_watcher
+from jh_config_manager.service import start_config_watcher
 
 def main():
     parser = argparse.ArgumentParser(description="JupyterHub config manager service")

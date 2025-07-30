@@ -1,7 +1,7 @@
 import os
 import tempfile
 import json
-from config_manager import manager
+from jh_config_manager import manager
 
 
 def test_write_and_read_cache():

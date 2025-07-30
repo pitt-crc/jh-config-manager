@@ -1,6 +1,6 @@
 # CRC JupyterHub Configuration Manager
 
-`config_manager` is a dynamic configuration manager service for 
+`jh_config_manager` is a dynamic configuration manager service for 
 [JupyterHub](https://jupyterhub.readthedocs.io/) that monitors and updates virtual environment and module configuration
 information. It writes this information to a cache file for use by custom spawners or UI components.
 
@@ -17,7 +17,7 @@ Clone the repository and install the package into your virtual environment:
 
 ```
 git clone <your-repo-url>
-cd config_manager
+cd jh_config_manager
 pip install .
 ```
 or through pip:
@@ -80,7 +80,7 @@ c.JupyterHub.services = [
 ## Testing
 To run the service manually, use the following command:
 ```
-python -m config_manager \
+python -m jh_config_manager \
   --venv_root=/your/path/to/envs \
   --modules_config_file=/your/path/to/modules_config.json \
   --cache_file=/your/path/to/output_cache.json \
