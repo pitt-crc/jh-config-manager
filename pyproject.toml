@@ -26,10 +26,12 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.10"
 jupyterhub = "*"
 tornado = "*"
 traitlets = "*"
+cffi = "^1.17.1"
+cryptography = "^45.0.7"
 
 [tool.poetry.group.tests]
 optional = true
