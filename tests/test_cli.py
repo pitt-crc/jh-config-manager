@@ -4,7 +4,7 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 
-from jh_config_manager.cli import (create_parser, DEFAULT_CACHE_FILE, DEFAULT_MODULES_CONFIG_FILE, DEFAULT_RELOAD_INTERVAL, DEFAULT_VENV_ROOT)
+from jh_config_manager.cli import *
 
 
 class CreateParserFunction(TestCase):

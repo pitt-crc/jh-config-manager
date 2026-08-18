@@ -6,7 +6,7 @@ import shutil
 import tempfile
 from unittest import TestCase
 
-from jh_config_manager.manager import get_virtualenvs, load_modules_config, write_cache
+from jh_config_manager.manager import *
 
 
 class GetVirtualenvsFunction(TestCase):
