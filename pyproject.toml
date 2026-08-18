@@ -9,9 +9,6 @@ authors = ["Pitt Center for Research Computing and Data", ]
 license = "GPL-3.0-only"
 readme = "README.md"
 description = "Dynamic JupyterHub config manager service."
-homepage = "https://github.com/pitt-crc/jh-config-manager"
-repository = "https://github.com/pitt-crc/jh-config-manager"
-documentation = "https://github.com/pitt-crc/jh-config-manager"
 keywords = ["Pitt", "CRC", "Jupyter", "JupyterHub", "JupyterLab", "Configuration", "Manager"]
 classifiers = [
     "Intended Audience :: System Administrators",
@@ -24,6 +21,9 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
+
+[tool.poetry.scripts]
+jh-config-manager = "jh_config_manager.__main__:main"
 
 [tool.poetry.dependencies]
 python = ">=3.10"
