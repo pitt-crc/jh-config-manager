@@ -8,7 +8,13 @@ either via the command line or through the process environment.
 import argparse
 import os
 
-__all__ = ['create_parser']
+__all__ = [
+    'DEFAULT_VENV_ROOT',
+    'DEFAULT_MODULES_CONFIG_FILE',
+    'DEFAULT_CACHE_FILE',
+    'DEFAULT_RELOAD_INTERVAL',
+    'create_parser'
+]
 
 DEFAULT_VENV_ROOT = '/ihome/crc/install/jupyterhub/hub.5.2.1/envs'
 DEFAULT_MODULES_CONFIG_FILE = '/ihome/crc/install/jupyterhub/modules_config.json'

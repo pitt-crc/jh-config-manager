@@ -24,7 +24,3 @@ def main() -> None:
     print("[jh_config_manager] Service running. Watching for changes...")
     while True:
         time.sleep(60)
-
-
-if __name__ == '__main__':
-    main()
