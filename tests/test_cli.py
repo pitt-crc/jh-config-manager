@@ -56,3 +56,20 @@ class CreateParserFunction(TestCase):
         self.assertEqual(args.modules_config_file, '/explicit/modules.json')
         self.assertEqual(args.cache_file, '/explicit/cache.json')
         self.assertEqual(args.reload_interval, 15)
+
+    @patch.dict(os.environ, {'RELOAD_INTERVAL': 'abc'}, clear=True)
+    def test_rejects_non_numeric_reload_interval_from_environment(self):
+        """Verify a non-numeric RELOAD_INTERVAL produces a clean usage error instead of a traceback."""
+
+        with patch('sys.stderr'), self.assertRaises(SystemExit) as ctx:
+            create_parser().parse_args([])
+
+        self.assertEqual(ctx.exception.code, 2)
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_rejects_non_positive_reload_interval(self):
+        """Verify a reload interval below 1 is rejected, since 0 would busy-loop the scanner."""
+
+        for value in ('0', '-5'):
+            with self.subTest(value=value), patch('sys.stderr'), self.assertRaises(SystemExit):
+                create_parser().parse_args(['-r', value])

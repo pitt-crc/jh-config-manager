@@ -22,6 +22,30 @@ DEFAULT_CACHE_FILE = '/ihome/crc/install/jupyterhub/config_cache.json'
 DEFAULT_RELOAD_INTERVAL = 30
 
 
+def _positive_int(value: str) -> int:
+    """Parse a strictly positive integer command-line or environment value.
+
+    Args:
+        value: The raw string to parse.
+
+    Returns:
+        The parsed integer.
+
+    Raises:
+        argparse.ArgumentTypeError: If the value is not an integer greater than zero.
+    """
+
+    try:
+        number = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid integer value: {value!r}") from None
+
+    if number < 1:
+        raise argparse.ArgumentTypeError(f"must be at least 1, got {number}")
+
+    return number
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser for the config manager service.
 
@@ -32,7 +56,8 @@ def create_parser() -> argparse.ArgumentParser:
     default_venv_root = os.environ.get('VENV_ROOT', DEFAULT_VENV_ROOT)
     default_modules_config_file = os.environ.get('MODULES_CONFIG_FILE', DEFAULT_MODULES_CONFIG_FILE)
     default_cache_file = os.environ.get('CACHE_FILE', DEFAULT_CACHE_FILE)
-    default_reload_interval = int(os.environ.get('RELOAD_INTERVAL', DEFAULT_RELOAD_INTERVAL))
+    # Left unconverted so argparse validates it with `_positive_int` and reports a bad value cleanly.
+    default_reload_interval = os.environ.get('RELOAD_INTERVAL', DEFAULT_RELOAD_INTERVAL)
 
     parser = argparse.ArgumentParser(
         description="JupyterHub config manager service",
@@ -62,7 +87,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         '-r', '--reload_interval',
-        type=int,
+        type=_positive_int,
         default=default_reload_interval,
         metavar='SECONDS',
         help='Number of seconds to wait between scans.',

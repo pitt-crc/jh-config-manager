@@ -22,11 +22,19 @@ class GetVirtualenvsFunction(TestCase):
 
         shutil.rmtree(self.temp_dir)
 
+    def make_venv(self, name):
+        """Create a `venv`-style environment directory under the temporary root."""
+
+        path = os.path.join(self.temp_dir, name)
+        os.mkdir(path)
+        open(os.path.join(path, 'pyvenv.cfg'), 'w').close()
+        return path
+
     def test_returns_sorted_virtualenv_directory_names(self):
         """Verify virtualenv directories are returned sorted by name."""
 
-        os.mkdir(os.path.join(self.temp_dir, 'zeta'))
-        os.mkdir(os.path.join(self.temp_dir, 'alpha'))
+        self.make_venv('zeta')
+        self.make_venv('alpha')
 
         result = get_virtualenvs(self.temp_dir)
 
@@ -35,19 +43,57 @@ class GetVirtualenvsFunction(TestCase):
     def test_excludes_files_from_results(self):
         """Verify non-directory entries are excluded from the results."""
 
-        os.mkdir(os.path.join(self.temp_dir, 'envname'))
+        self.make_venv('envname')
         open(os.path.join(self.temp_dir, 'not_a_dir.txt'), 'w').close()
 
         result = get_virtualenvs(self.temp_dir)
 
         self.assertEqual(result, ['envname'])
 
-    def test_returns_empty_list_for_unreadable_root(self):
-        """Verify an empty list is returned when the root directory cannot be scanned."""
+    def test_excludes_directories_that_are_not_environments(self):
+        """Verify plain directories, such as backups or scratch space, are not listed."""
 
-        result = get_virtualenvs(os.path.join(self.temp_dir, 'does_not_exist'))
+        self.make_venv('real')
+        os.mkdir(os.path.join(self.temp_dir, 'backup'))
 
-        self.assertEqual(result, [], 'Expected empty list when venv_root cannot be scanned')
+        result = get_virtualenvs(self.temp_dir)
+
+        self.assertEqual(result, ['real'])
+
+    def test_excludes_hidden_directories(self):
+        """Verify hidden environment directories are not listed."""
+
+        self.make_venv('.hidden')
+        self.make_venv('visible')
+
+        result = get_virtualenvs(self.temp_dir)
+
+        self.assertEqual(result, ['visible'])
+
+    def test_includes_conda_environments(self):
+        """Verify a conda environment, identified by `conda-meta`, is listed."""
+
+        os.makedirs(os.path.join(self.temp_dir, 'condaenv', 'conda-meta'))
+
+        result = get_virtualenvs(self.temp_dir)
+
+        self.assertEqual(result, ['condaenv'])
+
+    def test_includes_directories_with_a_python_interpreter(self):
+        """Verify a directory containing `bin/python` is listed even without other markers."""
+
+        os.makedirs(os.path.join(self.temp_dir, 'bare', 'bin'))
+        open(os.path.join(self.temp_dir, 'bare', 'bin', 'python'), 'w').close()
+
+        result = get_virtualenvs(self.temp_dir)
+
+        self.assertEqual(result, ['bare'])
+
+    def test_raises_for_unreadable_root(self):
+        """Verify OSError propagates when the root directory cannot be scanned, so callers can keep prior state."""
+
+        with self.assertRaises(OSError):
+            get_virtualenvs(os.path.join(self.temp_dir, 'does_not_exist'))
 
 
 class LoadModulesConfigFunction(TestCase):
@@ -75,22 +121,92 @@ class LoadModulesConfigFunction(TestCase):
 
         self.assertEqual(result, data)
 
-    def test_returns_empty_dict_for_missing_file(self):
-        """Verify an empty dict is returned when the config file cannot be read."""
+    def test_raises_for_missing_file(self):
+        """Verify OSError propagates when the config file cannot be read."""
 
-        result = load_modules_config(os.path.join(self.temp_dir, 'missing.json'))
+        with self.assertRaises(OSError):
+            load_modules_config(os.path.join(self.temp_dir, 'missing.json'))
 
-        self.assertEqual(result, {}, 'Expected empty dict when modules_config_file cannot be read')
-
-    def test_returns_empty_dict_for_malformed_json(self):
-        """Verify an empty dict is returned when the config file contains invalid JSON."""
+    def test_raises_for_malformed_json(self):
+        """Verify ValueError propagates when the config file contains invalid JSON."""
 
         with open(self.config_file, 'w') as f:
             f.write('{not valid json')
 
-        result = load_modules_config(self.config_file)
+        with self.assertRaises(ValueError):
+            load_modules_config(self.config_file)
 
-        self.assertEqual(result, {})
+    def test_raises_for_non_object_top_level(self):
+        """Verify ValueError propagates when the config file is valid JSON but not an object."""
+
+        with open(self.config_file, 'w') as f:
+            json.dump(['not', 'an', 'object'], f)
+
+        with self.assertRaises(ValueError):
+            load_modules_config(self.config_file)
+
+
+class ValidateModulesConfigFunction(TestCase):
+    """Verify entry filtering behavior of `validate_modules_config`."""
+
+    def test_returns_valid_entries_unchanged(self):
+        """Verify well-formed entries pass through with no problems reported."""
+
+        config = {'amber24': {'display_name': 'Amber 2024', 'modules': ['openmpi/4.1.7-stdwe7', 'amber/24']}}
+
+        valid, problems = validate_modules_config(config)
+
+        self.assertEqual(valid, config)
+        self.assertEqual(problems, [])
+
+    def test_returns_empty_result_for_empty_config(self):
+        """Verify an empty configuration is valid, since an admin may legitimately offer no module sets."""
+
+        self.assertEqual(validate_modules_config({}), ({}, []))
+
+    def test_defaults_missing_display_name_to_key(self):
+        """Verify a missing display_name falls back to the entry key."""
+
+        valid, problems = validate_modules_config({'cuda123': {'modules': ['cuda/12.3.0']}})
+
+        self.assertEqual(valid['cuda123']['display_name'], 'cuda123')
+        self.assertEqual(problems, [])
+
+    def test_drops_invalid_entries_and_keeps_valid_ones(self):
+        """Verify each malformed entry is dropped with a problem message while valid ones survive."""
+
+        config = {
+            'good': {'display_name': 'Good', 'modules': ['gcc/12.2.0']},
+            'not_an_object': 'gcc',
+            'no_modules': {'display_name': 'X'},
+            'empty_modules': {'display_name': 'X', 'modules': []},
+            'modules_not_list': {'display_name': 'X', 'modules': 'gcc/12.2.0'},
+            'bad_display_name': {'display_name': 5, 'modules': ['gcc']},
+            'blank_display_name': {'display_name': '  ', 'modules': ['gcc']},
+        }
+
+        valid, problems = validate_modules_config(config)
+
+        self.assertEqual(list(valid), ['good'])
+        self.assertEqual(len(problems), 6)
+
+    def test_drops_entries_with_unsafe_module_names(self):
+        """Verify module names that would break the spawner's ':'-joined list or the shell are rejected."""
+
+        unsafe = ['gcc:12', 'gcc 12', 'gcc;rm -rf', '$(id)', '', '-flag', 5, None]
+        config = {f'set{i}': {'modules': ['gcc/12', name]} for i, name in enumerate(unsafe)}
+        config['ok'] = {'modules': ['gcc/12']}
+
+        valid, problems = validate_modules_config(config)
+
+        self.assertEqual(list(valid), ['ok'])
+        self.assertEqual(len(problems), len(unsafe))
+
+    def test_raises_when_no_entry_is_valid(self):
+        """Verify ValueError is raised when every entry is invalid, so the caller keeps its previous state."""
+
+        with self.assertRaises(ValueError):
+            validate_modules_config({'bad': {'modules': []}})
 
 
 class WriteCacheFunction(TestCase):
@@ -117,11 +233,51 @@ class WriteCacheFunction(TestCase):
 
         self.assertEqual(result, {'virtualenvs': ['alpha', 'beta'], 'modules': {'python': ['3.12']}})
 
-    def test_produces_no_cache_file_for_unwritable_path(self):
-        """Verify write_cache produces no cache file when the target path cannot be written."""
+    def test_raises_and_produces_no_cache_file_for_unwritable_path(self):
+        """Verify OSError propagates and no cache file is produced when the target directory is missing."""
 
         unwritable_path = os.path.join(self.temp_dir, 'missing_dir', 'cache.json')
 
-        write_cache(unwritable_path, [], {})
+        with self.assertRaises(OSError):
+            write_cache(unwritable_path, [], {})
 
         self.assertFalse(os.path.exists(unwritable_path))
+
+    def test_replaces_existing_cache_file(self):
+        """Verify an existing cache file is fully replaced by the new state."""
+
+        write_cache(self.cache_file, ['old'], {'old': {}})
+        write_cache(self.cache_file, ['new'], {})
+
+        with open(self.cache_file) as f:
+            result = json.load(f)
+
+        self.assertEqual(result, {'virtualenvs': ['new'], 'modules': {}})
+
+    def test_leaves_no_temporary_files_after_success(self):
+        """Verify only the cache file remains in the directory after a successful write."""
+
+        write_cache(self.cache_file, ['alpha'], {})
+
+        self.assertEqual(os.listdir(self.temp_dir), ['cache.json'])
+
+    def test_preserves_existing_cache_and_cleans_up_when_serialization_fails(self):
+        """Verify a failed write leaves the prior cache intact and removes the temporary file."""
+
+        write_cache(self.cache_file, ['good'], {})
+
+        with self.assertRaises(TypeError):
+            write_cache(self.cache_file, ['bad'], {'unserializable': object()})
+
+        with open(self.cache_file) as f:
+            result = json.load(f)
+
+        self.assertEqual(result, {'virtualenvs': ['good'], 'modules': {}})
+        self.assertEqual(os.listdir(self.temp_dir), ['cache.json'])
+
+    def test_cache_file_is_world_readable(self):
+        """Verify the cache file is readable by other users, such as the spawner's account."""
+
+        write_cache(self.cache_file, [], {})
+
+        self.assertEqual(os.stat(self.cache_file).st_mode & 0o777, 0o644)

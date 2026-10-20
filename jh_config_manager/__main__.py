@@ -1,5 +1,6 @@
 """Command-line entry point for running the JupyterHub config manager service."""
 
+import sys
 import time
 
 from .cli import create_parser
@@ -14,7 +15,7 @@ def main() -> None:
     parser = create_parser()
     args = parser.parse_args()
 
-    start_config_watcher(
+    watcher = start_config_watcher(
         venv_root=args.venv_root,
         modules_config_file=args.modules_config_file,
         cache_file=args.cache_file,
@@ -22,5 +23,13 @@ def main() -> None:
     )
 
     print("[jh_config_manager] Service running. Watching for changes...")
-    while True:
+    while watcher.is_alive():
         time.sleep(60)
+
+    # Exit non-zero so JupyterHub notices the service is no longer refreshing the cache.
+    print("[jh_config_manager] Config watcher thread stopped unexpectedly. Exiting.")
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

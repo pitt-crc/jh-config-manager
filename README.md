@@ -25,6 +25,14 @@ Command-line arguments take precedence over environment variables, which in turn
 | `-c`, `--cache_file`          | `CACHE_FILE`          | `/ihome/crc/install/jupyterhub/config_cache.json`   | Path to the output cache file (used by the JupyterHub spawner) |
 | `-r`, `--reload_interval`     | `RELOAD_INTERVAL`     | `30`                                                | Number of seconds between scans                                |
 
+## Failure Behavior
+
+The cache file is replaced atomically, so the spawner never reads a partially written file. If a scan fails (for
+example an unreadable `venv_root` or malformed JSON in the modules file), the service logs the error and keeps
+publishing the last good state instead of an empty one; nothing is written until both sources have loaded once. A
+failed write is retried on the next scan. If the watcher thread stops, the service exits with status 1 so JupyterHub
+restarts it.
+
 ## Installation
 
 This project is available directly from PyPI:
@@ -80,6 +88,15 @@ list of modules to load when that set is selected:
   }
 }
 ```
+
+Entries are validated before they reach the spawner. A module set is dropped (and logged once) unless `modules` is a
+non-empty list of Lmod-style names made of letters, digits and `. _ + / -` (no spaces, colons or shell characters), and
+`display_name`, if present, is a non-empty string. A missing `display_name` defaults to the key. If a file has entries
+but none are valid, the previously published modules are kept.
+
+Environments are discovered as the immediate subdirectories of `venv_root` that look like Python environments: they
+contain `pyvenv.cfg` (venv/virtualenv), `conda-meta` (conda), or `bin/python`. Hidden directories and other folders,
+such as backups, are ignored.
 
 The service continuously monitors the virtual environments and module configuration file for changes. Whenever either
 source changes, it regenerates the cache file in full, combining both into a single document that JupyterHub consults at

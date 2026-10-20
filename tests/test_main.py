@@ -33,3 +33,15 @@ class MainFunction(TestCase):
             cache_file='/cache.json',
             reload_interval=30,
         )
+
+    def test_exits_nonzero_when_config_watcher_thread_dies(
+        self, mock_create_parser, mock_start_config_watcher, mock_time
+    ):
+        """Verify the service exits with a failure status if the watcher thread stops, so the Hub restarts it."""
+
+        mock_start_config_watcher.return_value.is_alive.return_value = False
+
+        with self.assertRaises(SystemExit) as ctx:
+            main_module.main()
+
+        self.assertEqual(ctx.exception.code, 1)
