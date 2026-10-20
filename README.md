@@ -20,9 +20,9 @@ Command-line arguments take precedence over environment variables, which in turn
 
 | Argument                      | Environment Variable  | Default                                             | Description                                                    |
 |-------------------------------|-----------------------|-----------------------------------------------------|----------------------------------------------------------------|
-| `-v`, `--venv_root`           | `VENV_ROOT`           | `/ihome/crc/install/jupyterhub/hub.5.2.1/envs`      | Path to the root directory containing virtual environments     |
-| `-m`, `--modules_config_file` | `MODULES_CONFIG_FILE` | `/ihome/crc/install/jupyterhub/modules_config.json` | Path to the JSON file describing modules                       |
-| `-c`, `--cache_file`          | `CACHE_FILE`          | `/ihome/crc/install/jupyterhub/config_cache.json`   | Path to the output cache file (used by the JupyterHub spawner) |
+| `-v`, `--venv_root`           | `VENV_ROOT`           | `/software/rhel9/manual/install/jupyterhub/hub.5.2.1/envs`      | Path to the root directory containing virtual environments     |
+| `-m`, `--modules_config_file` | `MODULES_CONFIG_FILE` | `/software/rhel9/manual/install/jupyterhub/modules_config.json` | Path to the JSON file describing modules                       |
+| `-c`, `--cache_file`          | `CACHE_FILE`          | `/software/rhel9/manual/install/jupyterhub/config_cache.json`   | Path to the output cache file (used by the JupyterHub spawner) |
 | `-r`, `--reload_interval`     | `RELOAD_INTERVAL`     | `30`                                                | Number of seconds between scans                                |
 
 ## Failure Behavior
@@ -58,9 +58,9 @@ c.JupyterHub.services = [
         'name': 'jh-config-manager',
         'command': [
             'python', '-m', 'jh_config_manager',
-            '--venv_root=/ihome/crc/install/jupyterhub/hub.5.2.1/envs',
-            '--modules_config_file=/ihome/crc/install/jupyterhub/modules_config.json',
-            '--cache_file=/ihome/crc/install/jupyterhub/config_cache.json',
+            '--venv_root=/software/rhel9/manual/install/jupyterhub/hub.5.2.1/envs',
+            '--modules_config_file=/software/rhel9/manual/install/jupyterhub/modules_config.json',
+            '--cache_file=/software/rhel9/manual/install/jupyterhub/config_cache.json',
             '--reload_interval=30',
         ],
     },

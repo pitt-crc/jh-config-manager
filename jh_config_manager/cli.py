@@ -16,9 +16,9 @@ __all__ = [
     'create_parser'
 ]
 
-DEFAULT_VENV_ROOT = '/ihome/crc/install/jupyterhub/hub.5.2.1/envs'
-DEFAULT_MODULES_CONFIG_FILE = '/ihome/crc/install/jupyterhub/modules_config.json'
-DEFAULT_CACHE_FILE = '/ihome/crc/install/jupyterhub/config_cache.json'
+DEFAULT_VENV_ROOT = '/software/rhel9/manual/install/jupyterhub/hub.5.2.1/envs'
+DEFAULT_MODULES_CONFIG_FILE = '/software/rhel9/manual/install/jupyterhub/modules_config.json'
+DEFAULT_CACHE_FILE = '/software/rhel9/manual/install/jupyterhub/config_cache.json'
 DEFAULT_RELOAD_INTERVAL = 30
 
 
