@@ -24,6 +24,40 @@ Command-line arguments take precedence over environment variables, which in turn
 | `-m`, `--modules_config_file` | `MODULES_CONFIG_FILE` | `/software/rhel9/manual/install/jupyterhub/modules_config.json` | Path to the JSON file describing modules                       |
 | `-c`, `--cache_file`          | `CACHE_FILE`          | `/software/rhel9/manual/install/jupyterhub/config_cache.json`   | Path to the output cache file (used by the JupyterHub spawner) |
 | `-r`, `--reload_interval`     | `RELOAD_INTERVAL`     | `30`                                                | Number of seconds between scans                                |
+| `-l`, `--lmod_init`           | `LMOD_INIT_FILE`      | *(empty: discovery off)*                            | Lmod's bash init script, or `auto`; turns on module discovery  |
+| `-p`, `--modulepath`          | `JH_MODULEPATH`       | *(the service's own `MODULEPATH`)*                  | Colon-separated `MODULEPATH` to list modules from              |
+| `-s`, `--modules_scan_interval` | `MODULES_SCAN_INTERVAL` | `600`                                           | Seconds between Lmod scans                                     |
+| `--dump_modules`              |                       |                                                     | Diagnostic: print the modules found, once, and exit            |
+
+## Automatic Module Discovery (Lmod)
+
+By default the module choices come only from the curated sets in the modules configuration file. With `--lmod_init` the service
+also asks **Lmod** which modules exist and records them in the cache as `available_modules`, so the spawner can offer a
+searchable list of all of them without anyone maintaining it by hand:
+
+```json
+{"virtualenvs": ["tf"], "modules": {"...": "..."}, "available_modules": ["amber/24", "cuda/12.3.0", "gcc/12.2.0"]}
+```
+
+- **How:** it runs `module -t avail` in a bash that has sourced Lmod's init script (the listing a user gets in a login shell),
+  every `--modules_scan_interval` seconds (default 10 minutes; a scan can take seconds on a network filesystem). Names that
+  are not safe to put in a shell command are dropped.
+- **Off by default.** Without `--lmod_init` nothing changes and the cache file keeps its earlier format.
+- **Failures keep the last list.** If a scan fails, times out (a hung Lmod and what it started are killed after 120 s) or comes
+  back empty, the previous list stays published, and the rest of the cache is not held up.
+- **Needs Lmod on the machine that runs the service**: the Hub host, not the compute nodes. If `/etc/profile.d/lmod.sh` exists
+  there, `--lmod_init=/etc/profile.d/lmod.sh` is usually all that is needed; `--lmod_init=auto` looks in the usual places.
+- **Hierarchical module trees.** `avail` lists what is loadable with the *current* `MODULEPATH`. On a flat tree that is every
+  module. On a hierarchy (Core / compiler / MPI), modules that sit below a compiler are not listed until that compiler is loaded;
+  list the extra directories in `--modulepath` to include them (a module that needs another one loaded first must then be
+  selected after it, see the spawner's README).
+- **Check what it finds before relying on it** (this has been tested against a fake Lmod, not yet against a real one):
+
+  ```bash
+  python -m jh_config_manager --lmod_init=/etc/profile.d/lmod.sh --dump_modules
+  ```
+
+  prints one module name per line and a count, or the reason Lmod failed; the exit status is non-zero when nothing was found.
 
 ## Failure Behavior
 

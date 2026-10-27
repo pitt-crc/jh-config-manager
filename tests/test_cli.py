@@ -73,3 +73,42 @@ class CreateParserFunction(TestCase):
         for value in ('0', '-5'):
             with self.subTest(value=value), patch('sys.stderr'), self.assertRaises(SystemExit):
                 create_parser().parse_args(['-r', value])
+
+
+class ModuleDiscoveryOptions(TestCase):
+    """Options for listing the modules Lmod offers."""
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_discovery_is_off_by_default(self):
+        args = create_parser().parse_args([])
+
+        self.assertEqual(args.lmod_init, '')
+        self.assertEqual(args.modulepath, '')
+        self.assertEqual(args.modules_scan_interval, DEFAULT_MODULES_SCAN_INTERVAL)
+        self.assertFalse(args.dump_modules)
+
+    @patch.dict(os.environ, {'LMOD_INIT_FILE': '/etc/profile.d/lmod.sh', 'JH_MODULEPATH': '/a:/b', 'MODULES_SCAN_INTERVAL': '90'},
+                clear=True)
+    def test_environment_variables_set_the_defaults(self):
+        args = create_parser().parse_args([])
+
+        self.assertEqual((args.lmod_init, args.modulepath, args.modules_scan_interval), ('/etc/profile.d/lmod.sh', '/a:/b', 90))
+
+    @patch.dict(os.environ, {'LMOD_INIT_FILE': '/from/env'}, clear=True)
+    def test_command_line_arguments_win(self):
+        args = create_parser().parse_args(['-l', 'auto', '-p', '/x', '-s', '30', '--dump_modules'])
+
+        self.assertEqual((args.lmod_init, args.modulepath, args.modules_scan_interval, args.dump_modules), ('auto', '/x', 30, True))
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_the_scan_interval_must_be_a_positive_number(self):
+        for value in ('0', '-5', 'abc'):
+            with self.subTest(value=value), patch('sys.stderr'), self.assertRaises(SystemExit):
+                create_parser().parse_args(['-s', value])
+
+    @patch.dict(os.environ, {'MODULES_SCAN_INTERVAL': 'soon'}, clear=True)
+    def test_a_bad_scan_interval_in_the_environment_is_a_usage_error(self):
+        with patch('sys.stderr'), self.assertRaises(SystemExit) as ctx:
+            create_parser().parse_args([])
+
+        self.assertEqual(ctx.exception.code, 2)

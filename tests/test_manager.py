@@ -281,3 +281,35 @@ class WriteCacheFunction(TestCase):
         write_cache(self.cache_file, [], {})
 
         self.assertEqual(os.stat(self.cache_file).st_mode & 0o777, 0o644)
+
+
+class WriteCacheAvailableModules(TestCase):
+    """The optional list of modules found through Lmod."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.cache_file = os.path.join(self.temp_dir, 'cache.json')
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir)
+
+    def read(self):
+        with open(self.cache_file) as f:
+            return json.load(f)
+
+    def test_the_list_is_recorded_when_given(self):
+        write_cache(self.cache_file, ['alpha'], {}, ['cuda/12.3.0', 'gcc/12.2.0'])
+
+        self.assertEqual(self.read(), {'virtualenvs': ['alpha'], 'modules': {}, 'available_modules': ['cuda/12.3.0', 'gcc/12.2.0']})
+
+    def test_the_file_keeps_its_old_format_when_there_is_no_list(self):
+        """Discovery off: nothing for older readers (or the same spawner without the picker) to trip over."""
+        write_cache(self.cache_file, ['alpha'], {})
+        write_cache(self.cache_file, ['alpha'], {}, None)
+
+        self.assertEqual(self.read(), {'virtualenvs': ['alpha'], 'modules': {}})
+
+    def test_an_empty_list_is_recorded_as_empty_not_omitted(self):
+        write_cache(self.cache_file, [], {}, [])
+
+        self.assertEqual(self.read()['available_modules'], [])

@@ -140,7 +140,7 @@ def validate_modules_config(config: dict) -> tuple[dict, list[str]]:
     return valid, problems
 
 
-def write_cache(cache_file: str, venvs: list[str], modules: dict) -> None:
+def write_cache(cache_file: str, venvs: list[str], modules: dict, available_modules: list[str] | None = None) -> None:
     """Atomically write the combined virtualenv and module state to the JupyterHub cache file as JSON.
 
     The state is written to a temporary file in the same directory and then renamed over the
@@ -149,7 +149,9 @@ def write_cache(cache_file: str, venvs: list[str], modules: dict) -> None:
     Args:
         cache_file: Path to the cache file consumed by the JupyterHub spawner.
         venvs: Virtualenv directory names to record in the cache.
-        modules: Module configuration to record in the cache.
+        modules: Module configuration (the curated module sets) to record in the cache.
+        available_modules: Names of every module Lmod reports as loadable, discovered automatically. When None (discovery is
+            off) the key is left out, so the file keeps the format earlier versions wrote.
 
     Raises:
         OSError: If the cache file cannot be written.
@@ -158,9 +160,13 @@ def write_cache(cache_file: str, venvs: list[str], modules: dict) -> None:
     cache_dir = os.path.dirname(os.path.abspath(cache_file))
     fd, tmp_path = tempfile.mkstemp(dir=cache_dir, prefix='.config_cache.', suffix='.tmp')
 
+    state = {'virtualenvs': venvs, 'modules': modules}
+    if available_modules is not None:
+        state['available_modules'] = available_modules
+
     try:
         with os.fdopen(fd, 'w') as f:
-            json.dump({'virtualenvs': venvs, 'modules': modules}, f)
+            json.dump(state, f)
             f.flush()
             os.fsync(f.fileno())
 
