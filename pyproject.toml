@@ -27,11 +27,11 @@ jh-config-manager = "jh_config_manager.__main__:main"
 
 [tool.poetry.dependencies]
 python = ">=3.11"
-jupyterhub = "*"
-tornado = "*"
-traitlets = "*"
-cffi = "^2.1.1"
-cryptography = "^50.0.0"
+jupyterhub = "6.1.1"
+tornado = "6.6"
+traitlets = "5.16.1"
+cffi = "2.1.1"
+cryptography = "50.0.2"
 
 [tool.poetry.group.tests]
 optional = true
